@@ -15,16 +15,22 @@ MAP_FILE = build/navilos.map
 ASM_SRCS = $(wildcard boot/*.S)
 ASM_OBJS = $(patsubst boot/%.S, build/%.os, $(ASM_SRCS))
 
-VPATH = boot \
-		hal/$(TARGET)
+# SECTION_START ============================================
+# Usually we should modify(or add) this section when we add new source(or header)
+VPATH = boot			\
+		hal/$(TARGET)	\
+		lib
 
-INC_DIRS =	-I includes\
-			-I hal\
-			-I hal/$(TARGET)
+INC_DIRS =	-I includes			\
+			-I hal				\
+			-I hal/$(TARGET)	\
+			-I lib
 
 C_SRCS = $(notdir $(wildcard boot/*.c))
 C_SRCS+= $(notdir $(wildcard hal/$(TARGET)/*.c))
+C_SRCS+= $(notdir $(wildcard lib/*.c))
 C_OBJS = $(patsubst %.c, build/%.o, $(C_SRCS))
+# SECTION_END ============================================
 
 C_FLAGS = -c -g -std=c11
 
