@@ -302,5 +302,7 @@
  #  define INTMAX_C(c)	c ## LL
  #  define UINTMAX_C(c)	c ## ULL
  # endif
+
+ #define NULL    ((void*)0)
  
  #endif /* stdint.h */
