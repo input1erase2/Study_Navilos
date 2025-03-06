@@ -10,3 +10,7 @@ void main(void) {
         hal_uart_put_char('C');
     }
 }
+
+static void hw_init(void) {
+    hal_uart_init();
+}

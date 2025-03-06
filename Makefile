@@ -2,6 +2,7 @@
 # https://stackoverflow.com/a/53143269
 ARCH = armv7-a
 #MCPU = cortex-a8
+TARGET = rvpb
 
 CC = arm-none-eabi-gcc
 AS = arm-none-eabi-as
@@ -14,10 +15,18 @@ MAP_FILE = build/navilos.map
 ASM_SRCS = $(wildcard boot/*.S)
 ASM_OBJS = $(patsubst boot/%.S, build/%.os, $(ASM_SRCS))
 
-C_SRCS = $(wildcard boot/*.c)
-C_OBJS = $(patsubst boot/%.c, build/%.o, $(C_SRCS))
+VPATH = boot \
+		hal/$(TARGET)
 
-INC_DIRS = -Iincludes
+INC_DIRS =	-I includes\
+			-I hal\
+			-I hal/$(TARGET)
+
+C_SRCS = $(notdir $(wildcard boot/*.c))
+C_SRCS+= $(notdir $(wildcard hal/$(TARGET)/*.c))
+C_OBJS = $(patsubst %.c, build/%.o, $(C_SRCS))
+
+C_FLAGS = -c -g -std=c11
 
 navilos = build/navilos.axf
 navilos_bin = build/navilos.bin
@@ -30,11 +39,12 @@ clean:
 	@rm -rf build
 
 run: $(navilos)
-	qemu-system-arm -M realview-pb-a8 -display none -kernel $(navilos)
+	qemu-system-arm -M realview-pb-a8 -display none -kernel $(navilos)\
+		-nographic
 
 debug: $(navilos)
 	qemu-system-arm -M realview-pb-a8 -display none -kernel $(navilos)\
-		-S -gdb tcp::1234,ipv4
+		-nographic -S -gdb tcp::1234,ipv4
 
 gdb:
 	arm-none-eabi-gdb
@@ -44,11 +54,11 @@ $(navilos): $(ASM_OBJS) $(C_OBJS) $(LINKER_SCRIPT)
 		$(C_OBJS) -Map=$(MAP_FILE)
 	$(OC) -O binary $(navilos) $(navilos_bin)
 
-build/%.os: $(ASM_SRCS)
+build/%.os: %.S
 	mkdir -p $(shell dirname $@)
-	$(CC) -march=$(ARCH) $(INC_DIRS) -c -g -o $@ $<
+	$(CC) -march=$(ARCH) $(INC_DIRS) $(C_FLAGS) -o $@ $<
 
-build/%.o: $(C_SRCS)
+build/%.o: %.c
 	mkdir -p $(shell dirname $@)
-	$(CC) -march=$(ARCH) $(INC_DIRS) -c -g -o $@ $<
+	$(CC) -march=$(ARCH) $(INC_DIRS) $(C_FLAGS) -o $@ $<
  
