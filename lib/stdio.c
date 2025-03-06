@@ -64,17 +64,14 @@ uint32_t vsprintf(char* buf, const char* fmt, va_list arg) {
 }
 
 uint32_t utoa(char* buf, uint32_t val, utoa_t base) {
-    const char asciibase = 'a';
     uint32_t c = 0;
     int32_t idx = 0;
-    char tmp[11];       // It is enough for 32 bit int
+    char tmp[11];       // It is big enough for store 32-bit int
 
     do {
-        uint32_t tail = val % (uint32_t)base;
-        if (tail >= 10) {
-            tail += asciibase - '0' - 10;
-        }
-        tmp[idx] = (tail + '0');
+        uint32_t t = val % (uint32_t)base;
+        if (t >= 10) t += 'A' - '0' - 10;
+        tmp[idx] = (t + '0');
         val /= base;
         idx++;
     } while (val);
