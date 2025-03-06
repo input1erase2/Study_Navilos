@@ -1,8 +1,11 @@
 #include "stdint.h"
 #include "Uart.h"
 #include "HalUart.h"
+#include "HalInterrupt.h"
 
-extern volatile PL011_t* uart;
+volatile PL011_t* uart = (PL011_t*)UART_BASE_ADDRESS0;
+
+static void interrupt_handler(void);
 
 void hal_uart_init(void) {
     // Enable UART
@@ -10,11 +13,16 @@ void hal_uart_init(void) {
     uart->uartcr.bits.TXE = 1;
     uart->uartcr.bits.RXE = 1;
     uart->uartcr.bits.UARTEN = 1;
+    // Enable UART input interrupt
+    uart->uartimsc.bits.RXIM = 1;       // Interrupt Mask Set/Clear Register
+    // Register UART interrupt handler
+    hal_interrupt_enable(UART_INTERRUPT0);
+    hal_interrupt_register_handler(UART_INTERRUPT0, interrupt_handler);
 }
 
 void hal_uart_put_char(uint8_t ch) {
     while (uart->uartfr.bits.TXFF);     // Waiting buffer is empty
-    uart->uartdr.all = (ch & 0xFF);     // bottom
+    uart->uartdr.all = (ch & 0xFF);
 }
 
 /* 
@@ -48,4 +56,9 @@ uint8_t hal_uart_get_char(void) {
         return 0;
     }
     return (uint8_t)(data & 0xFF);
+}
+
+static void interrupt_handler(void) {
+    uint8_t ch = hal_uart_get_char();
+    hal_uart_put_char(ch);
 }
