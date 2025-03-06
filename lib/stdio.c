@@ -59,6 +59,7 @@ uint32_t vsprintf(char* buf, const char* fmt, va_list arg) {
             buf[c++] = fmt[i];
         }
     }
+    buf[c] = '\0';      // [Important!] Make sure last char is null char.
     return c;
 }
 
@@ -69,16 +70,16 @@ uint32_t utoa(char* buf, uint32_t val, utoa_t base) {
     char tmp[11];       // It is enough for 32 bit int
 
     do {
-        uint32_t t = val % (uint32_t)base;
-        if (t >= 10) {
-            t += asciibase - '0' - 10;
+        uint32_t tail = val % (uint32_t)base;
+        if (tail >= 10) {
+            tail += asciibase - '0' - 10;
         }
-        tmp[idx] = (t + '0');
+        tmp[idx] = (tail + '0');
         val /= base;
         idx++;
-    } while(val);
+    } while (val);
 
-    // we should reverse tmp
+    // we should reverse tmp[]
     idx--;
     while (idx >= 0) {
         buf[c++] = tmp[idx];

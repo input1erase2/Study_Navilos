@@ -6,7 +6,7 @@ TARGET = rvpb
 
 CC = arm-none-eabi-gcc
 AS = arm-none-eabi-as
-LD = arm-none-eabi-ld
+LD = arm-none-eabi-gcc
 OC = arm-none-eabi-objcopy
 
 LINKER_SCRIPT = ./navilos.ld
@@ -32,7 +32,8 @@ C_SRCS+= $(notdir $(wildcard lib/*.c))
 C_OBJS = $(patsubst %.c, build/%.o, $(C_SRCS))
 # SECTION_END ============================================
 
-C_FLAGS = -c -g -std=c11
+C_FLAGS = -c -g -std=c11 -mthumb-interwork
+LD_FLAGS = -nostartfiles -nostdlib -nodefaultlibs -static -lgcc
 
 navilos = build/navilos.axf
 navilos_bin = build/navilos.bin
@@ -57,7 +58,7 @@ gdb:
 
 $(navilos): $(ASM_OBJS) $(C_OBJS) $(LINKER_SCRIPT)
 	$(LD) -n -T $(LINKER_SCRIPT) -o $(navilos) $(ASM_OBJS)\
-		$(C_OBJS) -Map=$(MAP_FILE)
+		$(C_OBJS) $(LD_FLAGS) -Wl,-Map=$(MAP_FILE)
 	$(OC) -O binary $(navilos) $(navilos_bin)
 
 build/%.os: %.S
