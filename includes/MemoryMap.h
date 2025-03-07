@@ -18,7 +18,7 @@
 #define FIQ_STACK_SIZE      (ABT_STACK_START - FIQ_STACK_START)     // 1MB Each
 #define ABT_STACK_SIZE      (UND_STACK_START - ABT_STACK_START)     // 1MB Each
 #define UND_STACK_SIZE      (TASK_STACK_START - UND_STACK_START)    // 1MB Each
-#define TASK_STACK_SIZE     (GLOBAL_ADDR_START - TASK_STACK_START)  // 1MB Each
+#define TASK_STACK_SIZE     (GLOBAL_STACK_START - TASK_STACK_START)  // 1MB Each
 #define DALLOC_MEM_SIZE     (55 * 1024 * 1024)                      // 55MB
 
 // Stack grows top to bottom (Full descending stack)

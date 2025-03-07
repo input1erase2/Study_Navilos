@@ -19,16 +19,19 @@ ASM_OBJS = $(patsubst boot/%.S, build/%.os, $(ASM_SRCS))
 # Usually we should modify(or add) this section when we add new source(or header)
 VPATH = boot			\
 		hal/$(TARGET)	\
-		lib
+		lib				\
+		kernel
 
 INC_DIRS =	-I includes			\
 			-I hal				\
 			-I hal/$(TARGET)	\
-			-I lib
+			-I lib				\
+			-I kernel
 
 C_SRCS = $(notdir $(wildcard boot/*.c))
 C_SRCS+= $(notdir $(wildcard hal/$(TARGET)/*.c))
 C_SRCS+= $(notdir $(wildcard lib/*.c))
+C_SRCS+= $(notdir $(wildcard kernel/*.c))
 C_OBJS = $(patsubst %.c, build/%.o, $(C_SRCS))
 # SECTION_END ============================================
 
