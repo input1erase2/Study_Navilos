@@ -3,7 +3,7 @@
 #include "HalUart.h"
 #include "HalInterrupt.h"
 
-volatile PL011_t* uart = (PL011_t*)UART_BASE_ADDRESS0;
+extern volatile PL011_t* uart;
 
 static void interrupt_handler(void);
 

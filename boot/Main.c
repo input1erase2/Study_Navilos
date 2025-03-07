@@ -1,11 +1,14 @@
 #include "stdint.h"
 #include "HalUart.h"
 #include "HalInterrupt.h"
+#include "HalTimer.h"
 #include "stdio.h"
 #include "stdbool.h"
+#include "stdlib.h"
 
 static void hw_init(void);
 static void printf_test(void);
+static void timer_test(void);
 
 void main(void) {
     hw_init();
@@ -18,13 +21,14 @@ void main(void) {
     putstr("Hello, world!\n");
 
     printf_test();
-
+    timer_test();
     while (true);
 }
 
 static void hw_init(void) {
     hal_interrupt_init();
     hal_uart_init();
+    hal_timer_init();
 }
 
 static void printf_test(void) {
@@ -42,4 +46,11 @@ static void printf_test(void) {
     debug_printf("%u = 5\n", i);
     // Test 5. print number in decimal and hex
     debug_printf("dec=%u hex=%x\n", 0xFF, 0xFF);
+}
+
+static void timer_test(void) {
+    while (true) {
+        debug_printf("Current timer count = %u\n", hal_timer_get_1ms_counter());
+        delay(1000);    // 1000ms = 1s
+    }
 }

@@ -57,7 +57,7 @@ gdb:
 	arm-none-eabi-gdb
 
 kill:
-	kill -9 `ps aux | grep 'qemu' | awk 'NR==1{print $$2}'`
+	kill `ps aux | grep 'qemu' | awk 'NR==1{print $$2}'`
 
 $(navilos): $(ASM_OBJS) $(C_OBJS) $(LINKER_SCRIPT)
 	$(LD) -n -T $(LINKER_SCRIPT) -o $(navilos) $(ASM_OBJS)\

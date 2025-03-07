@@ -4,8 +4,8 @@
 #include "armcpu.h"
 #include "memio.h"
 
-volatile GicCpu_t* gicCpu = (GicCpu_t*)GIC_CPU_BASE;
-volatile GicDist_t* gicDist = (GicDist_t*)GIC_DIST_BASE;
+extern volatile GicCpu_t* gicCpu;
+extern volatile GicDist_t* gicDist;
 
 static InterHdlr_fptr handlers[INTERRUPT_HANDLER_NUM];
 
