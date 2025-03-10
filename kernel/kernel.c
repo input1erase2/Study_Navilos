@@ -33,3 +33,11 @@ KernelEventFlag_t kernel_wait_events(uint32_t eventList) {
     }
     return KernelEventFlag_Empty;
 }
+
+bool kernel_send_msg(KernelMsgQ_t q, void* data, uint32_t count) {
+
+}
+
+uint32_t kernel_recv_msg(KernelMsgQ_t q, void* data, uint32_t count) {
+
+}
