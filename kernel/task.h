@@ -10,7 +10,7 @@
 typedef struct KernelTaskContext_t {
     uint32_t spsr;
     uint32_t r0_r12[13];
-    uint32_t lr;            // But every task runs inf loop, so LR is no need in this proj.
+    //uint32_t lr;            // Every task runs inf loop, so LR is no need in this proj.
     uint32_t pc;
 } KernelTaskContext_t;
 

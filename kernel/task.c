@@ -1,4 +1,5 @@
 #include "stdint.h"
+#include "stdio.h"
 #include "stdbool.h"
 #include "ARMv7AR.h"
 #include "armcpu.h"
@@ -17,6 +18,7 @@ static void restore_context(void);
 
 void kernel_task_init(void) {
     allocated_tcb_idx = 0;
+    current_tcb_idx = 0;
     for (uint32_t i = 0; i < MAX_TASK_NUM; ++i) {
         taskList[i].stack_base = 
             (uint8_t*)(TASK_STACK_START + (i * USRSYS_STACK_SIZE));
@@ -24,9 +26,9 @@ void kernel_task_init(void) {
             (uint32_t)taskList[i].stack_base + USRSYS_STACK_SIZE - 4; 
         taskList[i].sp -= sizeof(KernelTaskContext_t);
 
+
         KernelTaskContext_t* context = (KernelTaskContext_t *)taskList[i].sp;
         context->spsr = ARM_MODE_BIT_SYS;
-        context->lr = 0;
         context->pc = 0;
     }
 }
@@ -44,18 +46,16 @@ uint32_t kernel_task_create(KernelTaskFunc_t task, uint32_t priority) {
     return (allocated_tcb_idx - 1);
 }
 
-void kernel_task_start(void) {
-    nextTCB = &taskList[current_tcb_idx];
-    restore_context();
-}
-
 void kernel_task_scheduler(void) {
     currentTCB = &taskList[current_tcb_idx];
-    nextTCB = scheduler_roundrobin();
-
-    disable_irq();
+    debug_printf("current_tcb_idx = %u --> currentTCB.sp = 0x%x\n",
+        current_tcb_idx, currentTCB->sp);
+    nextTCB = scheduler_roundrobin();       // Select scheduler from here
+    debug_printf("current_tcb_idx = %u --> currentTCB.sp = 0x%x\n",
+        current_tcb_idx, nextTCB->sp);
+    //disable_irq();
     kernel_task_context_switching();
-    enable_irq();
+    //enable_irq();
 }
 __attribute__((naked)) void kernel_task_context_switching(void) {
     __asm__ ("B save_context");
@@ -79,6 +79,8 @@ static KernelTCB_t* scheduler_priority(void) {
     return currentTCB;
 }
 
+// This inline assembly function should co-worked with both structures
+// KernelTCB_t and KernelTaskContext_t. Order should be followed.
 static void save_context(void) {
     // save current task's context into the current task's stack
     __asm__("PUSH {lr}");
@@ -86,8 +88,26 @@ static void save_context(void) {
     __asm__("MRS r0, cpsr");
     __asm__("PUSH {r0}");
     // save current task's stack pointer into the current TCB
-    __asm__("");
-    __asm__("");
-    __asm__("");
+    __asm__("LDR r0, =currentTCB");
+    __asm__("LDR r0, [r0]");
+    __asm__("STMIA r0!, {sp}");
 }
-static void restore_context(void);
+// This inline assembly function should co-worked with both structures
+// KernelTCB_t and KernelTaskContext_t. Order should be followed.
+static void restore_context(void) {
+    // load next task's stack pointer in the next task's TCB
+    __asm__("LDR r0, =nextTCB");
+    __asm__("LDR r0, [r0]");
+    __asm__("LDMIA r0!, {sp}");
+    // load next task's context
+    __asm__("POP {r0}");
+    __asm__("MSR cpsr, r0");
+    __asm__("POP {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}");
+    __asm__("POP {pc}");
+}
+
+// This is for very first task when system begins.
+void kernel_task_start(void) {
+    nextTCB = &taskList[current_tcb_idx];
+    restore_context();
+}
