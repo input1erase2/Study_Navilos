@@ -17,14 +17,15 @@ typedef struct KernelTaskContext_t {
 typedef struct KernelTCB_t {
     uint32_t sp;
     uint8_t* stack_base;
-    uint32_t priority;
+    //uint32_t priority;
 } KernelTCB_t;
 
 typedef void (*KernelTaskFunc_t)(void);
 
 void kernel_task_init(void);
 void kernel_task_start(void);
-uint32_t kernel_task_create(KernelTaskFunc_t task, uint32_t priority);
+uint32_t kernel_task_create(KernelTaskFunc_t task);
+// uint32_t kernel_task_create(KernelTaskFunc_t task, uint32_t priority);
 void kernel_task_scheduler(void);
 void kernel_task_context_switching(void);
 
