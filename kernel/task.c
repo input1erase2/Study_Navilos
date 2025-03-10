@@ -59,11 +59,11 @@ uint32_t kernel_task_create(KernelTaskFunc_t task, uint32_t priority) {
  */
 void kernel_task_scheduler(void) {
     currentTCB = &taskList[current_tcb_idx];
-    debug_printf("current_tcb_idx = %u --> currentTCB.sp = 0x%x\n",
-        current_tcb_idx, currentTCB->sp);
+    /* debug_printf("current_tcb_idx = %u --> currentTCB.sp = 0x%x\n",
+        current_tcb_idx, currentTCB->sp); */
     nextTCB = scheduler_roundrobin();       // Select scheduler from here
-    debug_printf("current_tcb_idx = %u --> currentTCB.sp = 0x%x\n",
-        current_tcb_idx, nextTCB->sp);
+    /* debug_printf("current_tcb_idx = %u --> currentTCB.sp = 0x%x\n",
+        current_tcb_idx, nextTCB->sp); */
     //disable_irq();
     kernel_task_context_switching();
     //enable_irq();
