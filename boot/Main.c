@@ -71,6 +71,7 @@ static void kernel_init(void) {
 
     kernel_task_init();
     kernel_event_flag_init();
+    kernel_msgQ_init();
     
     taskId = kernel_task_create(user_task0);
     // taskId = kernel_task_create(user_task0, 0);
