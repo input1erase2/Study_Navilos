@@ -73,6 +73,18 @@ static void interrupt_handler(void) {
 static void interrupt_handler(void) {
     uint8_t ch = hal_uart_get_char();
     hal_uart_put_char(ch);
+
+#if 1
+    // This is section for testing critical section
+    if (ch == 'X') {
+        kernel_send_events(KernelEventFlag_CmdOut);     // to task 0
+        return;
+    }
+    if (ch == 'U') {
+        kernel_send_events(KernelEventFlag_UnlockMutex);
+        return;
+    }
+#endif
     // Send message and event 
     kernel_send_msg(KernelMsgQ_Task0, &ch, 1);
     kernel_send_events(KernelEventFlag_UartIn);

@@ -122,3 +122,7 @@ void kernel_task_start(void) {
     nextTCB = &taskList[current_tcb_idx];
     restore_context();
 }
+
+uint32_t kernel_task_get_current_task_id(void) {
+    return current_tcb_idx;
+}

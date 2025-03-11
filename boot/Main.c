@@ -21,6 +21,9 @@ void user_task0(void);
 void user_task1(void);
 void user_task2(void);
 
+static void test_critical_section(uint32_t p, uint32_t taskId);
+
+
 void main(void) {
     hw_init();
     
@@ -72,6 +75,8 @@ static void kernel_init(void) {
     kernel_task_init();
     kernel_event_flag_init();
     kernel_msgQ_init();
+    kernel_sem_init(1);     // binary semaphore
+    kernel_mutex_init();    // mutex
     
     taskId = kernel_task_create(user_task0);
     // taskId = kernel_task_create(user_task0, 0);
@@ -144,7 +149,7 @@ void user_task0(void) {
             // debug_printf("\nTask 0 Event Received --- <UART IN> event\n");
             break;
         case KernelEventFlag_CmdOut:
-            debug_printf("\nTask 0 Event Received --- <CMD OUT> event\n");
+            test_critical_section(5, 0);    // Interfere task 2's accessing
             break;
         default:
             break;
@@ -161,13 +166,19 @@ void user_task1(void) {
     uint8_t cmd[LOCAL_BUF_LEN];       // local buffer
 
     while (true) {
-        KernelEventFlag_t handleEvent = kernel_wait_events(KernelEventFlag_CmdIn);
+        KernelEventFlag_t handleEvent = kernel_wait_events(
+            KernelEventFlag_CmdIn |
+            KernelEventFlag_UnlockMutex
+        );
         switch(handleEvent) {
         case KernelEventFlag_CmdIn:
             memclr(cmd, LOCAL_BUF_LEN);
             kernel_recv_msg(KernelMsgQ_Task1, &cmdlen, 1);
             kernel_recv_msg(KernelMsgQ_Task1, &cmd, cmdlen);
             debug_printf("\n[TASK 1] Message received: %s\n", cmd);
+            break;
+        case KernelEventFlag_UnlockMutex:
+            kernel_unlock_mutex();
             break;
         default:
             break;
@@ -180,6 +191,25 @@ void user_task2(void) {
     uint32_t local = 0;
     debug_printf("[User Task #2] >> SP = 0x%x\n", &local);
     while (true) {
+        test_critical_section(3, 2);
         kernel_yield();
     }
+}
+
+static uint32_t shared_value;
+static void test_critical_section(uint32_t p, uint32_t taskId) {
+    // kernel_lock_sem();
+    kernel_lock_mutex();
+
+    debug_printf("User task <%u> :: changing value = %u\n", taskId, p);
+
+    shared_value = p;
+    // [★NOT NORMAL] This is simulation of multicore + pre-emption.
+    kernel_yield();
+    delay(1000);
+
+    debug_printf("User task <%u> :: current shared value = %u\n", taskId, p);
+
+    // kernel_unlock_sem();
+    kernel_unlock_mutex();
 }

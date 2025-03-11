@@ -63,3 +63,38 @@ uint32_t kernel_recv_msg(KernelMsgQ_t q, void* data, uint32_t count) {
     }
     return count;
 }
+
+void kernel_lock_sem(void) {
+    // Keep waiting until semaphore is available.
+    while (false == kernel_sem_test()) {
+        kernel_yield();
+    }
+}
+
+void kernel_unlock_sem(void) {
+    kernel_sem_release();
+}
+
+void kernel_lock_mutex(void) {
+    uint32_t current_task_id;
+    //
+    while (true) {
+        current_task_id = kernel_task_get_current_task_id();
+        // trying mutex lock, mutex lock failed
+        if (false == kernel_mutex_lock(current_task_id)) {
+            kernel_yield();
+        }
+        // mutex lock sucessfully
+        else {
+            break;
+        }
+    }
+}
+
+void kernel_unlock_mutex(void) {
+    uint32_t current_task_id = kernel_task_get_current_task_id();
+    // trying to unlock mutex, but failed
+    if (false == kernel_mutex_unlock(current_task_id)) {
+        kernel_yield();
+    }
+}
