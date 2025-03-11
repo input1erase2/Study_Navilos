@@ -58,7 +58,7 @@ uint8_t hal_uart_get_char(void) {
     }
     return (uint8_t)(data & 0xFF);
 }
-
+/* 
 static void interrupt_handler(void) {
     uint8_t ch = hal_uart_get_char();
     hal_uart_put_char(ch);
@@ -68,4 +68,12 @@ static void interrupt_handler(void) {
     if (ch == 'X') {
         kernel_send_events(KernelEventFlag_CmdOut);
     }
+}
+ */
+static void interrupt_handler(void) {
+    uint8_t ch = hal_uart_get_char();
+    hal_uart_put_char(ch);
+    // Send message and event 
+    kernel_send_msg(KernelMsgQ_Task0, &ch, 1);
+    kernel_send_events(KernelEventFlag_UartIn);
 }

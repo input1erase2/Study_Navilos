@@ -11,6 +11,8 @@
 #include "task.h"
 #include "kernel.h"
 
+#define LOCAL_BUF_LEN   100
+
 static void hw_init(void);
 static void printf_test(void);
 static void timer_test(void);
@@ -18,7 +20,6 @@ static void kernel_init(void);
 void user_task0(void);
 void user_task1(void);
 void user_task2(void);
-
 
 void main(void) {
     hw_init();
@@ -98,16 +99,50 @@ static void kernel_init(void) {
 void user_task0(void) {
     uint32_t local = 0;
     debug_printf("[User Task #0] >> SP = 0x%x\n", &local);
+
+    uint8_t cmdBuf[LOCAL_BUF_LEN];        // local buffer
+    uint32_t cmdBufIdx = 0;     // local buffer's idx = message length
+    uint8_t uartch = 0;
+
     while (true) {
         KernelEventFlag_t handleEvent = kernel_wait_events(
             KernelEventFlag_UartIn |
             KernelEventFlag_CmdOut
         );
         switch(handleEvent) {
-        case KernelEventFlag_UartIn:        // (TEST) Step 1
-            debug_printf("\nTask 0 Event Received --- <UART IN> event\n");
+        case KernelEventFlag_UartIn:
+            // Task 0 <--- MessageQueue 0 <--- uartch(1-byte)
+            kernel_recv_msg(KernelMsgQ_Task0, &uartch, 1);
+            // Task 1 <--- MessageQueue 1 <--- Msg + length <--- 'Enter(\r\n)'
+            if (uartch == '\r') {
+                cmdBuf[cmdBufIdx] = '\0';
+                // Exception handling --- Inf loop until message successfully send.
+                while (true) {
+                    // Step 1. Send length of message
+                    if (false == kernel_send_msg(KernelMsgQ_Task1, &cmdBufIdx, 1)) {
+                        kernel_yield();
+                    }
+                    // Step 2. Send message
+                    else if (false == kernel_send_msg(KernelMsgQ_Task1, cmdBuf, cmdBufIdx)) {
+                        uint8_t rollback;
+                        kernel_recv_msg(KernelMsgQ_Task1, &rollback, 1);
+                        kernel_yield();
+                    }
+                    else {
+                        // Step 3. Send event
+                        kernel_send_events(KernelEventFlag_CmdIn);
+                        break;
+                    }
+                }
+                cmdBufIdx = 0; 
+            }
+            else {
+                cmdBuf[cmdBufIdx++] = uartch;
+                cmdBufIdx %= LOCAL_BUF_LEN;
+            }
+            // debug_printf("\nTask 0 Event Received --- <UART IN> event\n");
             break;
-        case KernelEventFlag_CmdOut:        // (TEST) Step 3
+        case KernelEventFlag_CmdOut:
             debug_printf("\nTask 0 Event Received --- <CMD OUT> event\n");
             break;
         default:
@@ -120,11 +155,18 @@ void user_task0(void) {
 void user_task1(void) {
     uint32_t local = 0;
     debug_printf("[User Task #1] >> SP = 0x%x\n", &local);
+
+    uint8_t cmdlen = 0;     // message length
+    uint8_t cmd[LOCAL_BUF_LEN];       // local buffer
+
     while (true) {
         KernelEventFlag_t handleEvent = kernel_wait_events(KernelEventFlag_CmdIn);
         switch(handleEvent) {
-        case KernelEventFlag_CmdIn:         // (TEST) Step 2
-            debug_printf("\nTask 1 Event Received --- <CMD IN> event\n");
+        case KernelEventFlag_CmdIn:
+            memclr(cmd, LOCAL_BUF_LEN);
+            kernel_recv_msg(KernelMsgQ_Task1, &cmdlen, 1);
+            kernel_recv_msg(KernelMsgQ_Task1, &cmd, cmdlen);
+            debug_printf("\n[TASK 1] Message received: %s\n", cmd);
             break;
         default:
             break;
