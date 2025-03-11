@@ -22,5 +22,6 @@ bool kernel_msgQ_is_empty(KernelMsgQ_t q);
 bool kernel_msgQ_is_full(KernelMsgQ_t q);
 bool kernel_msgQ_enqueue(KernelMsgQ_t q, uint8_t data);
 bool kernel_msgQ_dequeue(KernelMsgQ_t q, uint8_t* out);
+uint32_t kernel_msgQ_count(KernelMsgQ_t q);
 
 #endif /* KERNEL_MSG_H_ */

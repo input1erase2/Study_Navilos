@@ -47,3 +47,7 @@ bool kernel_msgQ_dequeue(KernelMsgQ_t q, uint8_t* out) {
 
     return true;
 }
+
+uint32_t kernel_msgQ_count(KernelMsgQ_t q) {
+    return msgQ[q].rear - msgQ[q].front;
+}
